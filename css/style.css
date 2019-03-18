@@ -1,0 +1,147 @@
+html,body {
+    width: 100%;
+    padding-bottom: 30px;
+}
+
+.game {
+    border: 1px solid #000;
+    width: 1000px;
+    margin: 0 auto;
+    padding: 10px;
+    min-height: 800px;
+    background: #1b4c25;
+    user-select: none;
+}
+
+.deck {
+    min-height: 170px;
+}
+
+.col-3 .deck {
+    width: 30%;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.col-3 .deck:first-child {
+    margin-right: 20px;
+}
+
+.deck:empty {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.deck.clear {
+    border: none;
+}
+
+.card {
+    width: 100%;
+    height: 170px;
+    background: #7699e8;
+    font-size: 30px;
+    line-height: 25px;
+    display: flex;
+    border-radius: 5px;
+    position: relative;
+    color: transparent;
+    padding: 5px;
+    box-sizing: border-box;
+    border: 2px solid #cac6c6;
+    grid-column: 1;
+    margin-top: -160px;
+    pointer-events: none;
+}
+
+p + span {
+    background: red;
+}
+
+.card:not(.open) + .card.open {
+    margin-top: -160px;
+}
+
+.card.open {
+    margin-top: -145px;
+    pointer-events: all;
+}
+
+.card.selected {
+    box-shadow: 0px 0px 5px 1px #fff22c;
+}
+
+.deck.flat .card {
+    margin-top: -170px;
+}
+
+.col-3 .card.open {
+    margin-left: calc(100% + 20px);
+    margin-top: -170px;
+}
+
+.card:first-child,
+.deck.flat .card:first-child {
+    margin-top: 0;
+}
+
+.card:after {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+}
+
+.card:before {
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+}
+
+.spades.open, .clovers.open {
+    color: #000;
+}
+
+.hearts.open, .diamonds.open {
+    color: #ea6262;
+}
+
+.spades:after, .spades:before {
+    content: '♠';
+}
+
+.hearts:after, .hearts:before {
+    content: '♥';
+}
+
+.clovers:after, .clovers:before {
+    content: '♣';
+}
+
+.diamonds:after, .diamonds:before {
+    content: '♦';
+}
+
+.card.open {
+    background: #fff;
+}
+
+.row {
+    display: flex;
+}
+
+.upper-row {
+    margin-bottom: 50px;
+}
+
+.col {
+    width: 14.28%;
+}
+
+.col-3 {
+    width: 42.84%;
+}
+
+.col, .col-3 {
+    box-sizing: border-box;
+    padding: 0 10px;
+}
