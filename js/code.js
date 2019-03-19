@@ -265,8 +265,8 @@ Game.prototype = {
       for (let i = 0;i < 4 ;i++){
           if (this.finishDecks[i].cards.length==0) return false
           if (this.finishDecks[i].cards[this.finishDecks[i].cards.length-1].number != 13)return false
-          return true;
       }
+  		return true;
     },
 
     moveKing: function (firstDeck,secondDeck,cards,movingCards){//to move king on deck with no cards
