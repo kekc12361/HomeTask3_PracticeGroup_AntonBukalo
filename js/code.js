@@ -200,6 +200,7 @@ Game.prototype = {
 
         let card = e.detail.card;
         let finDeck = this.finishDecks;
+
             let pos = this.checkFinishPosCard(card, finDeck);
             if (pos >= 0) {
                 this.moveCards(e.detail.deck, this.finishDecks[pos], card);
@@ -227,29 +228,39 @@ Game.prototype = {
             let secondDeck = e.detail.deck;
             let cards = e.detail.cards;
             this.moveKing(firstDeck,secondDeck,cards,movingCards);
-            if (e.detail.deck instanceof DealDeck && firstDeck == null &&(cards !=undefined))//if dealdeck--> took 1
-                cards = e.detail.cards.slice(0,1);
-            if (firstDeck && firstDeck != secondDeck  &&(cards !=undefined)){
-                if (this.checkMove(movingCards, secondDeck)) {
-                    this.moveCards(firstDeck, secondDeck, movingCards);
-                }
-                this.openLastCardForPlayingDeck(firstDeck);
-                this.unselectDecks(firstDeck,secondDeck);
-                firstDeck = null;
-                movingCards = [];
 
-            } else if (firstDeck == secondDeck &&(cards !=undefined)){// if 2 clicks on one deck
-                this.unselectDecks(firstDeck,secondDeck);
-                firstDeck = null;
-                movingCards = [];
+            cards = this.sliceForDealDeck(firstDeck,secondDeck,cards);
+
+            if (firstDeck && firstDeck != secondDeck  &&(cards !=undefined)){
+                    if (this.checkMove(movingCards, secondDeck)) {
+                        this.moveCards(firstDeck, secondDeck, movingCards);
+                    }
+                    this.openLastCardForPlayingDeck(firstDeck);
+                    this.unselectDecks(firstDeck,secondDeck);
+                    firstDeck = null;
+                    movingCards = [];
+
+                } else if (firstDeck == secondDeck &&(cards !=undefined)){// if 2 clicks on one deck
+                    this.unselectDecks(firstDeck,secondDeck);
+                    firstDeck = null;
+                    movingCards = [];
 
             } else if (cards !=undefined) {
                 firstDeck = secondDeck;
                 movingCards = cards;
             }
-            if (this.checkVictory())alert("victory!!!"); //vivtory
+
+            if (this.checkVictory())alert("victory!!!"); //victory
         }
     },
+
+
+    sliceForDealDeck: function (firstDeck,secondDeck,cards) {
+        if (secondDeck instanceof DealDeck && firstDeck == null &&(cards !=undefined))//if dealdeck--> took 1
+            return cards.slice(0,1);
+        return cards;
+    },
+
     checkVictory: function () {
       for (let i = 0;i < 4 ;i++){
           if (this.finishDecks[i].cards.length==0) return false
@@ -446,9 +457,7 @@ PlayingDeck.prototype = Object.assign(Object.create(Deck.prototype), {
     openLastCard: function () { //open first card for generating and other
         if (this.cards.length)
             this.cards[this.cards.length-1].open();
-
     },
-
 });
 
 
