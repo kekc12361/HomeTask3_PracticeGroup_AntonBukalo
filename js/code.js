@@ -207,6 +207,7 @@ Game.prototype = {
                 if (JSON.stringify(e.detail.deck) !== JSON.stringify(this.dealDeck))//колода ли это
                     e.detail.deck.openLastCard();
         }
+        if (this.checkVictory())alert("victory!!!"); //victory
     },
 
     checkFinishPosCard: function (card, deck ) {
@@ -250,7 +251,6 @@ Game.prototype = {
                 movingCards = cards;
             }
 
-            if (this.checkVictory())alert("victory!!!"); //victory
         }
     },
 
