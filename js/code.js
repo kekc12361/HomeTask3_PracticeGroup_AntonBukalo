@@ -195,7 +195,9 @@ Game.prototype = {
 
     onDeckDoubleClick: function (e) {
         if (e.detail.deck instanceof PlayingDeck && e.detail.card[0]
-            !=e.detail.deck.cards[e.detail.deck.cards.length-1]) return 1;
+            !=e.detail.deck.cards[e.detail.deck.cards.length-1]) {
+                return 1;
+        }
         //для того чтобы если не последний эл-т playingDeck, то выходит
 
         let card = e.detail.card;
