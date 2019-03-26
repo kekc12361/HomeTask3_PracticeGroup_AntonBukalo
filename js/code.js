@@ -85,6 +85,7 @@ function Card(cardKit) {
     this.$el = document.createElement('div');
     this.$el.classList.add('card', GAME_SETTINGS.suitsNames[cardKit.suit]);
     this.$el.innerText = GAME_SETTINGS.signs[cardKit.number];
+    this.$el.draggable = true;
 
     this.registerEvents();
 }
@@ -137,10 +138,9 @@ Game.prototype = {
     },
     registerEvents: function() {
             this.$el.addEventListener("deckClicked", this.onDeckClick().bind(this));
-            // this.$el.addEventListener("click", this.onClick.bind(this));
             this.$el.addEventListener("deckDblclick", this.onDeckDoubleClick.bind(this));
-    },
 
+    },
 
     onDeckDoubleClick: function (e) {
         if (e.detail.deck instanceof PlayingDeck && e.detail.card[0]
@@ -185,14 +185,16 @@ Game.prototype = {
         return function(e) {
             let secondDeck = e.detail.deck;
             let cards = e.detail.cards;
+            this.moveKing(firstDeck, secondDeck, cards, movingCards);
 
-            this.moveKing(firstDeck,secondDeck,cards,movingCards);
-
-            cards = this.sliceForDealDeck(firstDeck,secondDeck,cards);
-            if (cards!=undefined) {
+            cards = this.sliceForDealDeck(firstDeck, secondDeck, cards);
+            if (cards != undefined) {
                 cards.forEach(card => card.select());
             }
-            if (firstDeck && firstDeck != secondDeck  &&(cards !=undefined)){
+            if (e.detail.dragFirst) {
+                firstDeck = secondDeck;
+                movingCards = cards;
+            }else if (firstDeck && firstDeck != secondDeck  &&(cards !=undefined)){
                     if (this.checkMove(movingCards, secondDeck)) {
                         this.moveCards(firstDeck, secondDeck, movingCards);
                     }
@@ -202,13 +204,13 @@ Game.prototype = {
                     firstDeck = null;
                     movingCards = [];
 
-                } else if (firstDeck == secondDeck &&(cards !=undefined)){// if 2 clicks on one deck
+            } else if (firstDeck == secondDeck &&(cards !=undefined)){// if 2 clicks on one deck
                     this.unselectDeck(firstDeck);
                     this.unselectDeck(secondDeck);
                     firstDeck = null;
                     movingCards = [];
 
-            } else if (cards !=undefined) {
+            } else if (cards !=undefined ) {
                 firstDeck = secondDeck;
                 movingCards = cards;
             }
@@ -292,6 +294,7 @@ Deck.prototype = {
         }
     },
 
+
     registerEvents: function () {
         this.$el.addEventListener("cardClicked", this.onCardClick.bind(this));
         this.$el.addEventListener("cardDblclick", this.onCardDoubleClick.bind(this));
@@ -300,7 +303,6 @@ Deck.prototype = {
 
     onCardDoubleClick: function (e) {
         let cards = [e.detail.card];
-
         let event = new CustomEvent('deckDblclick', {
             bubbles: true,
             detail: {
@@ -312,13 +314,18 @@ Deck.prototype = {
     },
 
     onCardClick: function (e) {
+        let dragFirst = undefined;
+        if (e.detail.dragFirst){
+            dragFirst = e.detail.dragFirst
+        }
         let cards = this.cards.slice(this.cards.indexOf(e.detail.card));
         // cards.forEach((card) => card.select());
         let event = new CustomEvent('deckClicked', {
             bubbles: true,
             detail: {
                 deck: this,
-                cards: cards
+                cards: cards,
+                dragFirst:dragFirst
             }
         });
         this.$el.dispatchEvent(event);
@@ -358,7 +365,7 @@ Card.prototype = {
         this.isOpen = false;
     },
 
-    onClick: function(e) {
+    onClick: function() {
         let event  = new CustomEvent('cardClicked', {
             bubbles: true,
             detail:{
@@ -386,7 +393,44 @@ Card.prototype = {
     registerEvents: function() {
         this.$el.addEventListener('click', this.onClick.bind(this));
         this.$el.addEventListener('dblclick', this.onDoubleClick.bind(this));
-    }
+
+        this.$el.addEventListener("dragstart", this.onDragStart.bind(this));
+        this.$el.addEventListener("drop",this.onDragEnd.bind(this));
+        this.$el.addEventListener("dragover", this.onDragEnter.bind(this));
+    },
+
+    onDragStart: function(event){
+        event.dataTransfer.effectAllowed = "move";
+         let e  = new CustomEvent('cardClicked', {
+            bubbles: true,
+            detail:{
+                card:this,
+                dragFirst:true
+            }
+        });
+        this.$el.dispatchEvent(e);
+    },
+
+    onDragEnter: function(event){
+        if (event.preventDefault) {
+            event.preventDefault(); // Necessary. Allows us to drop.
+        }
+        event.dataTransfer.dropEffect = "move";
+    },
+
+    onDragEnd: function(){
+
+        let e  = new CustomEvent('cardClicked', {
+            bubbles: true,
+            detail:{
+                card:this
+
+            }
+        });
+        this.$el.dispatchEvent(e);
+
+    },
+
 
 }
 
