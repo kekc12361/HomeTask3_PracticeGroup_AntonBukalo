@@ -175,8 +175,8 @@ Game.prototype = {
     },
 
     isComparableToPosDoubleClick(deck,card){
-        return deck.length > 0 && deck[deck.length - 1].color === card[0].color &&
-            card[0].number - deck[deck.length-1].number === 1 && card[0].suit == deck[deck.length - 1].suit
+        return deck.length > 0 && deck[deck.length - 1].hasSameColor(card[0]) &&
+            card[0].number - deck[deck.length-1].number === 1 && card[0].hasSameSuit(deck[deck.length - 1]);
     },
 
     onDeckClick: function() {
@@ -256,7 +256,7 @@ Game.prototype = {
         let from = cards[0];
         let to = secondDeck.cards[secondDeck.cards.length-1];
 
-        if (from.color !== to.color && (to.number - from.number == 1)) return true;
+        if (!from.hasSameColor(to) && (to.number - from.number == 1)) return true;
         else return false;
     },
 
@@ -363,6 +363,14 @@ Card.prototype = {
     close: function () {
         this.$el.classList.remove('open');
         this.isOpen = false;
+    },
+
+    hasSameColor: function(card) {
+        return  this.color === card.color;
+    },
+
+    hasSameSuit: function(card) {
+        return this.suit === card.suit;
     },
 
     onClick: function() {
