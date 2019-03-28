@@ -16,7 +16,8 @@ const GAME_SETTINGS = {
     },
     suits: [0, 1, 2, 3], //hearts, diamonds, clovers, spades
     suitsNames: ['hearts', 'diamonds', 'clovers', 'spades'],
-    colors: [0, 1] //red, black
+    colors: [0, 1], //red, black
+    timeout: 10000
 }
 
 window.addEventListener('load', function() {
@@ -47,16 +48,14 @@ function DealDeck() {
 
 function FinishDeck() {
     Deck.apply(this,arguments);
-
     this.$el.classList.add('flat');
-
     this.cards = [];
     this.suit = null;
 }
 
 function PlayingDeck(cardsKit) {
     Deck.apply(this,arguments);
-
+    this.$el.dataset.type = "playDeck";
     this.openLastCard();
 }
 
@@ -74,7 +73,7 @@ function Deck(cardsKit) { // cards kit is array of objects like this [{number: 1
     this.$wrapper.appendChild(this.$el);
     this.$wrapper.classList.add('col');
     this.$el.classList.add('deck');
-
+    this.$el.draggable = true;
     this.registerEvents();
 }
 
@@ -87,6 +86,7 @@ function Card(cardKit) {
     this.$el = document.createElement('div');
     this.$el.classList.add('card', GAME_SETTINGS.suitsNames[cardKit.suit]);
     this.$el.innerText = GAME_SETTINGS.signs[cardKit.number];
+    this.$el.draggable = true;
 
     this.registerEvents();
 }
@@ -95,6 +95,7 @@ Game.prototype = {
     createDecks: function() {
         this.$stashContainer.innerHTML = '';
         this.$playContainer.innerHTML = '';
+        this.timeoutID = null;
 
         let decks = this.getShuffledDecks();
 
@@ -107,8 +108,9 @@ Game.prototype = {
         }
 
         for (let i = 0;i < GAME_SETTINGS.amounts.decks.length;i++) {
-            this.playDecks = new PlayingDeck(decks.splice(0, GAME_SETTINGS.amounts.decks[i]));
-            this.$playContainer.appendChild(this.playDecks.$wrapper);
+            this.playDecks[i] = new PlayingDeck(decks.splice(0, GAME_SETTINGS.amounts.decks[i]));
+            this.playDecks[i].draggable = true;
+            this.$playContainer.appendChild(this.playDecks[i].$wrapper);
         }
         //create decks here
     },
@@ -127,148 +129,146 @@ Game.prototype = {
     },
 
     generateDeckKit: function () {
-        return [
-            {color: 0, suit: 0, number:1},//hearts
-            {color: 0, suit: 0, number:2},
-            {color: 0, suit: 0, number:3},
-            {color: 0, suit: 0, number:4},
-            {color: 0, suit: 0, number:5},
-            {color: 0, suit: 0, number:6},
-            {color: 0, suit: 0, number:7},
-            {color: 0, suit: 0, number:8},
-            {color: 0, suit: 0, number:9},
-            {color: 0, suit: 0, number:10},
-            {color: 0, suit: 0, number:11},
-            {color: 0, suit: 0, number:12},
-            {color: 0, suit: 0, number:13},
+        let deck = [];
+            for (let j = 0; j < 4; j++){
+                for (let k = 1; k < 14; k++){
+                    deck.push({color:Math.round(j/4),suit:j,number:k});
+                }
+            }
 
-            {color: 0, suit: 1, number:1},//diamonds
-            {color: 0, suit: 1, number:2},
-            {color: 0, suit: 1, number:3},
-            {color: 0, suit: 1, number:4},
-            {color: 0, suit: 1, number:5},
-            {color: 0, suit: 1, number:6},
-            {color: 0, suit: 1, number:7},
-            {color: 0, suit: 1, number:8},
-            {color: 0, suit: 1, number:9},
-            {color: 0, suit: 1, number:10},
-            {color: 0, suit: 1, number:11},
-            {color: 0, suit: 1, number:12},
-            {color: 0, suit: 1, number:13},
-
-            {color: 1, suit: 2, number:1},//clovers
-            {color: 1, suit: 2, number:2},
-            {color: 1, suit: 2, number:3},
-            {color: 1, suit: 2, number:4},
-            {color: 1, suit: 2, number:5},
-            {color: 1, suit: 2, number:6},
-            {color: 1, suit: 2, number:7},
-            {color: 1, suit: 2, number:8},
-            {color: 1, suit: 2, number:9},
-            {color: 1, suit: 2, number:10},
-            {color: 1, suit: 2, number:11},
-            {color: 1, suit: 2, number:12},
-            {color: 1, suit: 2, number:13},
-
-            {color: 1, suit: 3, number:1},//spades
-            {color: 1, suit: 3, number:2},
-            {color: 1, suit: 3, number:3},
-            {color: 1, suit: 3, number:4},
-            {color: 1, suit: 3, number:5},
-            {color: 1, suit: 3, number:6},
-            {color: 1, suit: 3, number:7},
-            {color: 1, suit: 3, number:8},
-            {color: 1, suit: 3, number:9},
-            {color: 1, suit: 3, number:10},
-            {color: 1, suit: 3, number:11},
-            {color: 1, suit: 3, number:12},
-            {color: 1, suit: 3, number:13},
-        ]
+        return deck;
 
     },
     registerEvents: function() {
             this.$el.addEventListener("deckClicked", this.onDeckClick().bind(this));
-            // this.$el.addEventListener("click", this.onClick.bind(this));
             this.$el.addEventListener("deckDblclick", this.onDeckDoubleClick.bind(this));
+
     },
 
-
     onDeckDoubleClick: function (e) {
+       window.clearTimeout(this.timeoutID);
         if (e.detail.deck instanceof PlayingDeck && e.detail.card[0]
             !=e.detail.deck.cards[e.detail.deck.cards.length-1]) {
                 return 1;
         }
         //для того чтобы если не последний эл-т playingDeck, то выходит
-
         let card = e.detail.card;
         let finDeck = this.finishDecks;
+        this.unselectDeck(e.detail.deck);
 
             let pos = this.checkFinishPosCard(card, finDeck);
             if (pos >= 0) {
                 this.moveCards(e.detail.deck, this.finishDecks[pos], card);
-                if (JSON.stringify(e.detail.deck) !== JSON.stringify(this.dealDeck))//колода ли это
+                if (JSON.stringify(e.detail.deck) !== JSON.stringify(this.dealDeck)) {//колода ли это
                     e.detail.deck.openLastCard();
+                }
         }
-        if (this.checkVictory())alert("victory!!!"); //victory
+        if (this.checkVictory()){
+            alert("victory!!!");
+        } //victory
+        this.timeoutID = window.setTimeout(this.showNextMove.bind(this), GAME_SETTINGS.timeout);
     },
 
     checkFinishPosCard: function (card, deck ) {
         for (let i = 0;i < 4; i++) {
             let tmpDeck = deck[i].cards;
-            if (tmpDeck.length == 0 && card[0].number == 1) {
+            if ((tmpDeck.length == 0 && card[0].number == 1 )||(this.isComparableToPosDoubleClick(tmpDeck,card))) {
                 return i
-            } else if (tmpDeck.length > 0 && tmpDeck[tmpDeck.length - 1].color === card[0].color &&
-                card[0].number - tmpDeck[tmpDeck.length - 1].number === 1 && card[0].suit == tmpDeck[tmpDeck.length - 1].suit)
-                return i
+            }
         }
         return -1;
     },
 
+    isComparableToPosDoubleClick(deck,card){
+        return deck.length > 0 && deck[deck.length - 1].hasSameColor(card[0]) &&
+            card[0].number - deck[deck.length-1].number === 1 && card[0].hasSameSuit(deck[deck.length - 1]);
+    },
+
     onDeckClick: function() {
+        // let timeoutID = null;
         let firstDeck = null;
         let movingCards = [];
         return function(e) {
+            window.clearTimeout(this.timeoutID);
+            this.unhighlightForAll();
             let secondDeck = e.detail.deck;
             let cards = e.detail.cards;
-            this.moveKing(firstDeck,secondDeck,cards,movingCards);
+            this.moveKing(firstDeck, secondDeck, cards, movingCards);
 
-            cards = this.sliceForDealDeck(firstDeck,secondDeck,cards);
-
-            if (firstDeck && firstDeck != secondDeck  &&(cards !=undefined)){
+            cards = this.sliceForDealDeck(firstDeck, secondDeck, cards);
+            if (cards != undefined) {
+                cards.forEach(card => card.select());
+            }
+            if (e.detail.dragFirst) {
+                this.unselectDeck(secondDeck);
+                firstDeck = secondDeck;
+                movingCards = cards;
+            }else if (firstDeck && firstDeck != secondDeck  &&(cards)){
                     if (this.checkMove(movingCards, secondDeck)) {
                         this.moveCards(firstDeck, secondDeck, movingCards);
                     }
                     this.openLastCardForPlayingDeck(firstDeck);
-                    this.unselectDecks(firstDeck,secondDeck);
+                    this.unselectDeck(firstDeck);
+                    this.unselectDeck(secondDeck);
                     firstDeck = null;
                     movingCards = [];
 
-                } else if (firstDeck == secondDeck &&(cards !=undefined)){// if 2 clicks on one deck
-                    this.unselectDecks(firstDeck,secondDeck);
+            } else if (firstDeck == secondDeck &&(cards)){// if 2 clicks on one deck
+                    this.unselectDeck(firstDeck);
+                    this.unselectDeck(secondDeck);
                     firstDeck = null;
                     movingCards = [];
 
-            } else if (cards !=undefined) {
+            } else if (cards) {
                 firstDeck = secondDeck;
                 movingCards = cards;
             }
-
+            this.timeoutID = window.setTimeout(this.showNextMove.bind(this), GAME_SETTINGS.timeout);
         }
     },
 
+    showNextMove: function(){
+        for (let i = 0;i < this.playDecks.length; i++){
+            let temp = this.checkOpenCard(this.playDecks[i]);
+            for (let j = 0;j < this.playDecks.length;j++){
+                if (this.checkMove(temp,this.playDecks[j])){
+                    temp.forEach(cards => cards.highlightForMoveWait());
+                    this.playDecks[j].cards[this.playDecks[j].cards.length -1].highlightForMoveWait();
+                    return 1;
+                }
+            }
+        }
+    },
+
+    unhighlightForAll: function(){
+      for (let i = 0; i < this.playDecks.length;i++){
+          this.playDecks[i].cards.forEach(cards => cards.unhighlightForMoveWait());
+      }
+    },
+
+    checkOpenCard: function(deck){
+       for (let i = 0;i < deck.cards.length; i++){
+           if (deck.cards[i].isOpen){
+               return deck.cards.slice(i);
+           }
+       }
+    },
 
     sliceForDealDeck: function (firstDeck,secondDeck,cards) {
-        if (secondDeck instanceof DealDeck && firstDeck == null &&(cards !=undefined))//if dealdeck--> took 1
+        if (secondDeck instanceof DealDeck && firstDeck === null &&(cards !==undefined))//if dealdeck--> took 1
             return cards.slice(0,1);
         return cards;
     },
 
     checkVictory: function () {
       for (let i = 0;i < 4 ;i++){
-          if (this.finishDecks[i].cards.length==0) return false
-          if (this.finishDecks[i].cards[this.finishDecks[i].cards.length-1].number != 13)return false
+          if (this.isVictorySolution(this.finishDecks[i])) return false
       }
   		return true;
+    },
+
+    isVictorySolution(finishDeck){
+        return finishDeck.cards.length==0 || finishDeck.cards[finishDeck.cards.length-1].number != 13
     },
 
     moveKing: function (firstDeck,secondDeck,cards,movingCards){//to move king on deck with no cards
@@ -291,12 +291,11 @@ Game.prototype = {
         let from = cards[0];
         let to = secondDeck.cards[secondDeck.cards.length-1];
 
-        if (from.color !== to.color && (to.number - from.number == 1)) return true;
+        if (!from.hasSameColor(to) && (to.number - from.number == 1)) return true;
         else return false;
     },
 
-    unselectDecks: function (firstDeck,secondDeck) {//unselect decks after move them
-        secondDeck.cards.forEach((card) => card.unselect());
+    unselectDeck: function (firstDeck) {//unselect decks after move them
         firstDeck.cards.forEach((card) => card.unselect());
     },
 
@@ -318,7 +317,26 @@ Deck.prototype = {
     },
 
     onClick: function(e){
-        if (e.target.className == "deck" && e.target.firstChild == null) {//check deck with no cards
+        if (e.target.dataset.type == "playDeck" && e.target.firstChild == null) {//check deck with no cards
+            let event = new CustomEvent('deckClicked', {
+                bubbles: true,
+                detail: {
+                    deck: this,
+                    cards: undefined
+                }
+            });
+            this.$el.dispatchEvent(event);
+        }
+    },
+
+    onDragEnter: function(event){
+        if (event.preventDefault) {
+            event.preventDefault(); // Necessary. Allows us to drop.
+        }
+    },
+
+    onDeckDragEnd: function(e){
+        if (e.target.dataset.type == "playDeck" && e.target.firstChild == null){
             let event = new CustomEvent('deckClicked', {
                 bubbles: true,
                 detail: {
@@ -334,11 +352,12 @@ Deck.prototype = {
         this.$el.addEventListener("cardClicked", this.onCardClick.bind(this));
         this.$el.addEventListener("cardDblclick", this.onCardDoubleClick.bind(this));
         this.$el.addEventListener("click", this.onClick.bind(this));
+        this.$el.addEventListener("drop", this.onDeckDragEnd.bind(this));
+        this.$el.addEventListener("dragover", this.onDragEnter.bind(this));
     },
 
     onCardDoubleClick: function (e) {
         let cards = [e.detail.card];
-
         let event = new CustomEvent('deckDblclick', {
             bubbles: true,
             detail: {
@@ -350,13 +369,17 @@ Deck.prototype = {
     },
 
     onCardClick: function (e) {
+        let dragFirst = undefined;
+        if (e.detail.dragFirst){
+            dragFirst = e.detail.dragFirst
+        }
         let cards = this.cards.slice(this.cards.indexOf(e.detail.card));
-        cards.forEach((card) => card.select());
         let event = new CustomEvent('deckClicked', {
             bubbles: true,
             detail: {
                 deck: this,
-                cards: cards
+                cards: cards,
+                dragFirst:dragFirst
             }
         });
         this.$el.dispatchEvent(event);
@@ -386,6 +409,14 @@ Card.prototype = {
         this.$el.classList.remove('selected');
     },
 
+    highlightForMoveWait: function(){
+        this.$el.classList.add('highlight');
+    },
+
+    unhighlightForMoveWait: function(){
+        this.$el.classList.remove('highlight');
+    },
+
     open: function() {
         this.$el.classList.add('open');
         this.isOpen = true;
@@ -396,7 +427,15 @@ Card.prototype = {
         this.isOpen = false;
     },
 
-    onClick: function(e) {
+    hasSameColor: function(card) {
+        return  this.color === card.color;
+    },
+
+    hasSameSuit: function(card) {
+        return this.suit === card.suit;
+    },
+
+    onClick: function() {
         let event  = new CustomEvent('cardClicked', {
             bubbles: true,
             detail:{
@@ -424,7 +463,43 @@ Card.prototype = {
     registerEvents: function() {
         this.$el.addEventListener('click', this.onClick.bind(this));
         this.$el.addEventListener('dblclick', this.onDoubleClick.bind(this));
-    }
+
+        this.$el.addEventListener("dragstart", this.onDragStart.bind(this));
+        this.$el.addEventListener("drop",this.onDragEnd.bind(this));
+        this.$el.addEventListener("dragover", this.onDragEnter.bind(this));
+    },
+
+    onDragStart: function(event){
+        event.dataTransfer.effectAllowed = "move";
+         let e  = new CustomEvent('cardClicked', {
+            bubbles: true,
+            detail:{
+                card:this,
+                dragFirst:true
+            }
+        });
+        this.$el.dispatchEvent(e);
+    },
+
+    onDragEnter: function(event){
+        if (event.preventDefault) {
+            event.preventDefault(); // Necessary. Allows us to drop.
+        }
+        event.dataTransfer.dropEffect = "move";
+    },
+
+    onDragEnd: function(){
+        let e  = new CustomEvent('cardClicked', {
+            bubbles: true,
+            detail:{
+                card:this
+
+            }
+        });
+        this.$el.dispatchEvent(e);
+
+    },
+
 
 }
 
