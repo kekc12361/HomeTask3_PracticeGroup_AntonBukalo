@@ -8,7 +8,7 @@ html,body {
     width: 1000px;
     margin: 0 auto;
     padding: 10px;
-    min-height: 800px;
+    min-height: 600px;
     background: #1b4c25;
     user-select: none;
 }
