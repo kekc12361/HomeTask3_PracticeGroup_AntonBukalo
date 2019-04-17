@@ -5,10 +5,10 @@ html,body {
 
 .game {
     border: 1px solid #000;
-    width: 1000px;
+    width: 900px;
     margin: 0 auto;
     padding: 10px;
-    min-height: 600px;
+    min-height: 500px;
     background: #1b4c25;
     user-select: none;
 }
